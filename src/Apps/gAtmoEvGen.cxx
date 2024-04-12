@@ -32,6 +32,7 @@
                        [--event-record-print-level level]
                        [--mc-job-status-refresh-rate  rate]
                        [--cache-file root_file]
+                       [-w]
 
          *** Options :
 
@@ -181,6 +182,8 @@
            --cache-file
               Allows users to specify a cache file so that the cache can be
               re-used in subsequent MC jobs.
+           -w
+              Force to generate weighted events.
 
          *** Examples:
 
@@ -313,6 +316,7 @@ long int        gOptRanSeed;                   // random number seed
 string          gOptInpXSecFile;               // cross-section splines
 double          gOptRL = -1;                   // distance of flux ray generation surface (m)
 double          gOptRT = -1;                   // radius of flux ray generation surface (m)
+bool            gOptWeighted;                  // generate weighted events
 
 // Defaults:
 //
@@ -374,7 +378,7 @@ int main(int argc, char** argv)
    * livetime we *need* to force a single probability scale. So if you change
    * the next line you need to make sure that the user didn't specify the -T
    * option. */
-  mcj_driver->ForceSingleProbScale();
+  if(!gOptWeighted) mcj_driver->ForceSingleProbScale();
 
   // initialize an ntuple writer
   NtpWriter ntpw(kDefOptNtpFormat, gOptRunNu, gOptRanSeed);
@@ -962,6 +966,22 @@ void GetCommandLineArgs(int argc, char ** argv)
   }
 
   //
+  // *** generate weighted events option
+  //
+  gOptWeighted = parser.OptionExists('w');
+  if(gOptWeighted) {
+    if(parser.OptionExists('T')) {
+      LOG("gevgen_atmo", pFATAL)
+        << "Can't generate weighted events with -T option specified"
+        << "\nUse just one of the -w and -T options";
+      PrintSyntax();
+      gAbortingInErr = true;
+      exit(1);
+    }
+    LOG("gevgen_atmo", pINFO) << "Force to generate weighted events";
+  }
+
+  //
   // print-out summary
   //
 
@@ -1076,6 +1096,7 @@ void PrintSyntax(void)
    << "\n           [--event-record-print-level level]"
    << "\n           [--mc-job-status-refresh-rate  rate]"
    << "\n           [--cache-file root_file]"
+   << "\n           [-w]"
    << "\n"
    << " Please also read the detailed documentation at http://www.genie-mc.org"
    << "\n";
