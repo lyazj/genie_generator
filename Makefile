@@ -336,9 +336,9 @@ make-bin-lib-dir: FORCE
 check-previous-installation: FORCE
 	@echo " "
 	@echo "** Testing for existing GENIE installation at specified installation location..."
-ifeq ($(strip $(GENIE_PREVIOUS_INSTALLATION)),YES)
-	$(error Previous installation exists at your specified installation path: $(GENIE_INSTALLATION_PATH). Try '$(MAKE) distclean' first)
-endif
+#ifeq ($(strip $(GENIE_PREVIOUS_INSTALLATION)),YES)
+#	$(error Previous installation exists at your specified installation path: $(GENIE_INSTALLATION_PATH). Try '$(MAKE) distclean' first)
+#endif
 
 
 make-install-dirs: FORCE
