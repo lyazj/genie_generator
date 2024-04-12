@@ -60,9 +60,12 @@ bool GAtmoFlux::GenerateNext(void)
      double E    = p4.Energy();
      double Emin = this->MinEnergy();
      double Emax = this->MaxEnergy();
+     double C    = p4.CosTheta();
+     double Cmin = this->MinCosTheta();
+     double Cmax = this->MaxCosTheta();
      double wght = this->Weight();
 
-     bool accept = (E<=Emax && E>=Emin && wght>0);
+     bool accept = (E<=Emax && E>=Emin && C<=Cmax && C>=Cmin && wght>0);
      if(accept) return true;
   }
   return false;
@@ -236,6 +239,18 @@ void GAtmoFlux::ForceMaxEnergy(double emax)
   fMaxEvCut = emax;
 }
 //___________________________________________________________________________
+void GAtmoFlux::ForceMinCosTheta(double cmin)
+{
+  cmin = TMath::Max(-1., cmin);
+  fMinCvCut = cmin;
+}
+//___________________________________________________________________________
+void GAtmoFlux::ForceMaxCosTheta(double cmax)
+{
+  cmax = TMath::Min(+1., cmax);
+  fMaxCvCut = cmax;
+}
+//___________________________________________________________________________
 void GAtmoFlux::Clear(Option_t * opt)
 {
 // Dummy clear method needed to conform to GFluxI interface
@@ -305,6 +320,10 @@ void GAtmoFlux::Initialize(void)
   // Default: No min/max energy cut
   this->ForceMinEnergy(0.);
   this->ForceMaxEnergy(9999999999.);
+
+  // Default: No min/max cos(theta) cut
+  this->ForceMinCosTheta(-1.);
+  this->ForceMaxCosTheta(+1.);
 
   // Default radii
   fRl = 0.0;

@@ -20,6 +20,7 @@
                         -e exposure_in_kton_x_yrs
                         -T exposure_in_seconds >
                         -E min_energy,max_energy
+                        -C min_cos_theta,max_cos_theta
                        [-o output_event_file_prefix]
                        [--flux-ray-generation-surface-distance ]
                        [--flux-ray-generation-surface-radius   ]
@@ -140,6 +141,10 @@
               Specifies the neutrino energy in GeV.
               Must be a comma-separated pair of numbers, eg `-E 0.3,70'
               [default: 0.5,50]
+           -C
+              Specifies the neutrino cos(theta).
+              Must be a comma-separated pair of numbers, eg `-C -0.5,0.5'
+              [default: None]
            --flux-ray-generation-surface-distance
            --flux-ray-generation-surface-radius
               See the User & Physics Manual for a graphical representation of the flux
@@ -310,6 +315,8 @@ double          gOptKtonYrExposure = -1;       // exposure - in terms of kton*yr
 double          gOptSecExposure = -1;          // exposure - in terms of seconds
 double          gOptEvMin;                     // minimum neutrino energy
 double          gOptEvMax;                     // maximum neutrino energy
+double          gOptCvMin;                     // minimum neutrino cos(theta)
+double          gOptCvMax;                     // maximum neutrino cos(theta)
 string          gOptEvFilePrefix;              // event file prefix
 TRotation       gOptRot;                       // coordinate rotation matrix: topocentric horizontal -> user-defined topocentric system
 long int        gOptRanSeed;                   // random number seed
@@ -532,6 +539,9 @@ GAtmoFlux* GetFlux(void)
   // set min/max energy:
   atmo_flux_driver->ForceMinEnergy (gOptEvMin * units::GeV);
   atmo_flux_driver->ForceMaxEnergy (gOptEvMax * units::GeV);
+  // set min/max cos(theta):
+  atmo_flux_driver->ForceMinCosTheta (gOptCvMin);
+  atmo_flux_driver->ForceMaxCosTheta (gOptCvMax);
   // set flux files:
   map<int,string>::const_iterator file_iter = gOptFluxFiles.begin();
   for( ; file_iter != gOptFluxFiles.end(); ++file_iter) {
@@ -682,9 +692,40 @@ void GetCommandLineArgs(int argc, char ** argv)
     }
   } else {
      LOG("gevgen_atmo", pNOTICE)
-        << "No -e option. Using default energy range";
+        << "No -E option. Using default energy range";
      gOptEvMin = kDefOptEvMax;
      gOptEvMax = kDefOptEvMax;
+  }
+
+  //
+  // *** neutrino cos(theta) range
+  //
+  if( parser.OptionExists('C') ) {
+    LOG("gevgen_atmo", pINFO) << "Reading neutrino cos(theta) range";
+    string nuc = parser.ArgAsString('C');
+
+    // must be a comma separated set of values
+    if(nuc.find(",") != string::npos) {
+       // split the comma separated list
+       vector<string> nurange = utils::str::Split(nuc, ",");
+       assert(nurange.size() == 2);
+       double cmin = atof(nurange[0].c_str());
+       double cmax = atof(nurange[1].c_str());
+       assert(cmax>cmin);
+       gOptCvMin = cmin;
+       gOptCvMax = cmax;
+    } else {
+      LOG("gevgen_atmo", pFATAL)
+        << "Invalid cos(theta) range. Use `-C cmin,cmax', eg `-C -0.5,0.5";
+      PrintSyntax();
+      gAbortingInErr = true;
+      exit(1);
+    }
+  } else {
+     LOG("gevgen_atmo", pNOTICE)
+        << "No -C option. Using no cos(theta) range";
+     gOptCvMin = -1.;
+     gOptCvMax = +1.;
   }
 
   //
@@ -1051,6 +1092,7 @@ void GetCommandLineArgs(int argc, char ** argv)
      << "\n\t" << expinfo.str()
      << "\n @@ Cuts"
      << "\n\t Using energy range = (" << gOptEvMin << " GeV, " << gOptEvMax << " GeV)"
+     << "\n\t Using cos(theta) range = (" << gOptCvMin << ", " << gOptCvMax << ")"
      << "\n @@ Coordinate transformation (Rotation THZ -> User-defined coordinate system)"
      << "\n" << rotation.str()
      << "\n\n";
@@ -1085,6 +1127,7 @@ void PrintSyntax(void)
    << "\n            -e exposure_in_kton_x_yrs"
    << "\n            -T exposure_in_seconds>"
    << "\n            -E min_energy,max_energy"
+   << "\n            -C min_cos_theta,max_cos_theta"
    << "\n           [-o output_event_file_prefix]"
    << "\n           [--flux-ray-generation-surface-distance]"
    << "\n           [--flux-ray-generation-surface-radius]"

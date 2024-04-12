@@ -85,6 +85,8 @@ public :
   long int NFluxNeutrinos     (void) const; ///< Number of flux nu's generated. Not the same as the number of nu's thrown towards the geometry (if there are cuts).
   void     ForceMinEnergy     (double emin);
   void     ForceMaxEnergy     (double emax);
+  void     ForceMinCosTheta   (double cmin);
+  void     ForceMaxCosTheta   (double cmax);
   void     SetSpectralIndex   (double index);
   void     SetRadii           (double Rlongitudinal, double Rtransverse);
   double   GetFluxSurfaceArea(void);
@@ -118,6 +120,8 @@ protected:
   void    CleanUp           (void);
   void    ResetSelection    (void);
   double  MinEnergy         (void) { return fMinEvCut; }
+  double  MinCosTheta       (void) { return fMinCvCut; }
+  double  MaxCosTheta       (void) { return fMaxCvCut; }
   TH3D *  CreateFluxHisto   (string name, string title);
   void    ZeroFluxHisto     (TH3D * hist);
   void    AddAllFluxes      (void);
@@ -137,6 +141,8 @@ protected:
   long int         fNNeutrinos;         ///< number of flux neutrinos thrown so far
   double           fMaxEvCut;           ///< user-defined cut: maximum energy
   double           fMinEvCut;           ///< user-defined cut: minimum energy
+  double           fMaxCvCut;           ///< user-defined cut: maximum cos(theta)
+  double           fMinCvCut;           ///< user-defined cut: minimum cos(theta)
   double           fRl;                 ///< defining flux neutrino generation surface: longitudinal radius
   double           fRt;                 ///< defining flux neutrino generation surface: transverse radius
   TRotation        fRotTHz2User;        ///< coord. system rotation: THZ -> Topocentric user-defined
